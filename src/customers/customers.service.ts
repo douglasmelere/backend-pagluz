@@ -1,8 +1,16 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, ILike } from 'typeorm';
 import { Customer } from './customer.entity';
-import { CreateCustomerDto, UpdateCustomerDto, FilterCustomersDto } from './customer.dto';
+import {
+  CreateCustomerDto,
+  UpdateCustomerDto,
+  FilterCustomersDto,
+} from './customer.dto';
 
 @Injectable()
 export class CustomersService {
@@ -46,11 +54,15 @@ export class CustomersService {
       }
 
       if (filters.city) {
-        query.andWhere('LOWER(customer.city) = LOWER(:city)', { city: filters.city });
+        query.andWhere('LOWER(customer.city) = LOWER(:city)', {
+          city: filters.city,
+        });
       }
 
       if (filters.state) {
-        query.andWhere('LOWER(customer.state) = LOWER(:state)', { state: filters.state });
+        query.andWhere('LOWER(customer.state) = LOWER(:state)', {
+          state: filters.state,
+        });
       }
 
       if (filters.search) {
@@ -78,7 +90,19 @@ export class CustomersService {
     return customer;
   }
 
-  async update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<Customer> {
+  async findOneByEmailOrCpfCnpj(
+    email: string,
+    cpfCnpj: string,
+  ): Promise<Customer | null> {
+    return this.customersRepository.findOne({
+      where: [{ email }, { cpfCnpj }],
+    });
+  }
+
+  async update(
+    id: string,
+    updateCustomerDto: UpdateCustomerDto,
+  ): Promise<Customer> {
     const customer = await this.findOne(id);
 
     // Se estiver alterando o email, verificar se já não existe outro cliente com esse email
@@ -108,7 +132,7 @@ export class CustomersService {
 
   async getStatistics(): Promise<any> {
     const totalCustomers = await this.customersRepository.count();
-    
+
     const statusCount = await this.customersRepository
       .createQueryBuilder('customer')
       .select('customer.status', 'status')
@@ -148,31 +172,35 @@ export class CustomersService {
     const customer = await this.findOne(id);
 
     if (!customer.monthlyEnergyConsumption) {
-      throw new ConflictException('Cliente não possui consumo mensal informado');
+      throw new ConflictException(
+        'Cliente não possui consumo mensal informado',
+      );
     }
 
     // Cálculos simplificados de potencial solar
     const dailyConsumption = customer.monthlyEnergyConsumption / 30;
     const sunHoursPerDay = 5; // Média de horas de sol por dia no Brasil
     const systemEfficiency = 0.75; // Eficiência do sistema
-    
-    const requiredPower = dailyConsumption / (sunHoursPerDay * systemEfficiency);
+
+    const requiredPower =
+      dailyConsumption / (sunHoursPerDay * systemEfficiency);
     const panelPower = 0.55; // kW por painel (550W)
     const numberOfPanels = Math.ceil(requiredPower / panelPower);
     const totalSystemPower = numberOfPanels * panelPower;
-    
+
     // Área necessária (cada painel ocupa aproximadamente 2m²)
     const requiredArea = numberOfPanels * 2;
-    
+
     // Economia estimada (considerando tarifa média de R$ 0,75/kWh)
     const averageTariff = 0.75;
-    const monthlySavings = customer.monthlyEnergyConsumption * averageTariff * 0.9; // 90% de economia
+    const monthlySavings =
+      customer.monthlyEnergyConsumption * averageTariff * 0.9; // 90% de economia
     const annualSavings = monthlySavings * 12;
-    
+
     // Investimento estimado (R$ 5.000 por kW instalado)
     const investmentPerKW = 5000;
     const totalInvestment = totalSystemPower * investmentPerKW;
-    
+
     // Retorno do investimento
     const paybackYears = totalInvestment / annualSavings;
 
@@ -188,7 +216,9 @@ export class CustomersService {
         numberOfPanels,
         totalSystemPower: Number(totalSystemPower.toFixed(2)),
         requiredArea: Number(requiredArea.toFixed(2)),
-        canInstall: !customer.availableRoofArea || customer.availableRoofArea >= requiredArea,
+        canInstall:
+          !customer.availableRoofArea ||
+          customer.availableRoofArea >= requiredArea,
       },
       financial: {
         estimatedInvestment: Number(totalInvestment.toFixed(2)),

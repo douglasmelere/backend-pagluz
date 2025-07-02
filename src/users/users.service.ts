@@ -1,6 +1,10 @@
 // src/users/users.service.ts
 
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users.entity';
@@ -15,7 +19,7 @@ export class UsersService {
 
   async create(registerDto: RegisterDto): Promise<User> {
     const existingUser = await this.findByEmail(registerDto.email);
-    
+
     if (existingUser) {
       throw new ConflictException('Email já cadastrado');
     }
@@ -26,14 +30,30 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find({
-      select: ['id', 'name', 'email', 'role', 'isActive', 'createdAt', 'lastLogin'],
+      select: [
+        'id',
+        'name',
+        'email',
+        'role',
+        'isActive',
+        'createdAt',
+        'lastLogin',
+      ],
     });
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'name', 'email', 'role', 'isActive', 'createdAt', 'lastLogin'],
+      select: [
+        'id',
+        'name',
+        'email',
+        'role',
+        'isActive',
+        'createdAt',
+        'lastLogin',
+      ],
     });
 
     if (!user) {
@@ -41,6 +61,10 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async findOneByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
   }
 
   async findByEmail(email: string): Promise<User | null> {
