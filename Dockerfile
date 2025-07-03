@@ -1,5 +1,5 @@
-# Use a imagem oficial do Node.js
-FROM node:18
+# Use a imagem oficial do Node.js 20
+FROM node:20
 
 # Defina o diretório de trabalho
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copie package.json e package-lock.json
 COPY package*.json ./
 
-# Instale dependências
+# Instale dependências, incluindo devDependencies
 RUN npm ci --no-cache
 
 # Copie o código
